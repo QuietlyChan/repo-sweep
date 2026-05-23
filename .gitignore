@@ -1,0 +1,5 @@
+.env
+.DS_Store
+gitlab-projects/
+node_modules/
+dist/
