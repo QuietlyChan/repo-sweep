@@ -11,6 +11,7 @@
     "clone": "bun run src/repo-sweep.ts clone",
     "pull": "bun run src/repo-sweep.ts pull",
     "typecheck": "tsc --noEmit",
+    "release:notes": "bun run scripts/release-notes.ts",
     "build:bin": "bun run scripts/build.ts",
     "build:bin:current": "bun run scripts/build.ts --current"
   },

@@ -14,6 +14,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   release:
     name: Build and publish release assets
@@ -21,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
@@ -39,16 +42,19 @@ jobs:
       - name: Build binaries
         run: bun run build:bin
 
+      - name: Generate release notes
+        run: bun run release:notes -- --tag "${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}" --out dist/RELEASE_NOTES.md
+
       - name: Generate checksums
         run: |
           cd dist
           sha256sum * > SHA256SUMS.txt
 
       - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          body_path: dist/RELEASE_NOTES.md
           files: |
             dist/*
-          generate_release_notes: true
           fail_on_unmatched_files: true
