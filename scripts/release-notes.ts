@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
@@ -28,12 +28,12 @@ function optionValue(args: string[], name: string): string | undefined {
 }
 
 function parseOptions(): Options {
-  const args = Bun.argv.slice(2);
-  const tag = optionValue(args, "--tag") || Bun.env.GITHUB_REF_NAME || "";
+  const args = process.argv.slice(2);
+  const tag = optionValue(args, "--tag") || process.env.GITHUB_REF_NAME || "";
   const out = optionValue(args, "--out") || "dist/RELEASE_NOTES.md";
 
   if (!tag) {
-    throw new Error("缺少 Release tag。请通过 --tag 传入，例如 --tag v0.1.0。");
+    throw new Error("缺少 Release tag。请通过 --tag 传入，例如 --tag vX.Y.Z。");
   }
 
   return { tag, out };

@@ -1,9 +1,47 @@
 {
-  "name": "repo-sweep",
-  "version": "0.1.0",
+  "name": "@quietlychan/repo-sweep",
+  "version": "0.1.1",
   "description": "Batch list, clone, and pull GitLab or GitHub repositories.",
+  "keywords": [
+    "git",
+    "gitlab",
+    "github",
+    "clone",
+    "pull",
+    "repository",
+    "cli",
+    "batch"
+  ],
+  "author": {
+    "name": "QuietlyChan",
+    "email": "8343216+QuietlyChan@users.noreply.github.com",
+    "url": "https://github.com/QuietlyChan"
+  },
   "license": "MIT",
+  "homepage": "https://github.com/QuietlyChan/repo-sweep#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QuietlyChan/repo-sweep.git"
+  },
+  "bugs": {
+    "url": "https://github.com/QuietlyChan/repo-sweep/issues"
+  },
   "type": "module",
+  "files": [
+    "bin/",
+    "dist-npm/",
+    ".env.example",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README*.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "start": "bun run src/repo-sweep.ts",
     "interactive": "bun run src/repo-sweep.ts",
@@ -12,11 +50,13 @@
     "pull": "bun run src/repo-sweep.ts pull",
     "typecheck": "tsc --noEmit",
     "release:notes": "bun run scripts/release-notes.ts",
+    "build:npm": "bun build src/repo-sweep.ts --target=node --outfile=dist-npm/repo-sweep.js",
+    "prepack": "bun run build:npm",
     "build:bin": "bun run scripts/build.ts",
     "build:bin:current": "bun run scripts/build.ts --current"
   },
   "bin": {
-    "repo-sweep": "./src/repo-sweep.ts"
+    "repo-sweep": "bin/repo-sweep"
   },
   "dependencies": {
     "@clack/prompts": "^1.4.0"

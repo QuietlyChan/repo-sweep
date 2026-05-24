@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "repo-sweep",
+      "name": "@quietlychan/repo-sweep",
       "dependencies": {
         "@clack/prompts": "^1.4.0",
       },

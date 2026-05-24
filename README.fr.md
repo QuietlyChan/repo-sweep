@@ -18,7 +18,27 @@ Repo Sweep permet de lister, cloner et mettre à jour en lot les dépôts GitLab
 
 - Git doit être installé et disponible dans `PATH`.
 - Le réseau doit pouvoir accéder au fournisseur Git configuré.
-- Bun est uniquement nécessaire pour le développement local. Les binaires de Release incluent le runtime Bun.
+- Le paquet npm nécessite Node.js 20 ou une version plus récente.
+- Bun est nécessaire pour le développement local et la construction des binaires de Release. Les binaires de Release incluent le runtime Bun.
+
+## Installation npm
+
+Le nom du paquet npm est `@quietlychan/repo-sweep` ; la commande installée reste `repo-sweep`.
+
+Exécution sans installation globale :
+
+```bash
+npx @quietlychan/repo-sweep --help
+```
+
+Installation globale :
+
+```bash
+npm install -g @quietlychan/repo-sweep
+repo-sweep --help
+```
+
+Si Node.js n'est pas disponible, télécharger le binaire mono-fichier correspondant à la plateforme depuis GitHub Releases.
 
 ## Configuration
 
@@ -52,40 +72,42 @@ GIT_USERNAME=x-access-token
 
 ## Utilisation
 
+Les exemples ci-dessous supposent une installation npm globale ou un binaire GitHub Release. Pour une exécution temporaire avec `npx`, remplacer `repo-sweep` par `npx @quietlychan/repo-sweep`.
+
 Mode interactif :
 
 ```bash
-bun run start
+repo-sweep
 ```
 
 Lister les dépôts :
 
 ```bash
-bun run list
+repo-sweep list
 ```
 
 Cloner les dépôts manquants :
 
 ```bash
-bun run clone
+repo-sweep clone
 ```
 
 Mettre à jour les dépôts existants :
 
 ```bash
-bun run pull
+repo-sweep pull
 ```
 
 Sortie JSON :
 
 ```bash
-bun run list -- --json
+repo-sweep list --json
 ```
 
 Cloner et mettre aussi à jour les dépôts déjà présents localement :
 
 ```bash
-bun run clone -- --update
+repo-sweep clone --update
 ```
 
 Exemple de progression :
@@ -151,8 +173,8 @@ Les assets de Release sont généralement produits par une pipeline CI, le plus 
 Ce dépôt inclut `.github/workflows/release.yml`. Pour publier une Release :
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
 GitHub Actions exécutera automatiquement :

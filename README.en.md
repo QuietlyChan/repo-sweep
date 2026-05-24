@@ -18,7 +18,27 @@ Repo Sweep batch lists, clones, and pulls repositories that the current account 
 
 - Git must be installed and available in `PATH`.
 - Network access to the configured Git provider.
-- Bun is only required for local development. Release binaries include the Bun runtime.
+- The npm package requires Node.js 20 or newer.
+- Bun is required for local development and Release binary builds. Release binaries include the Bun runtime.
+
+## npm Installation
+
+The npm package name is `@quietlychan/repo-sweep`; the installed command is still `repo-sweep`.
+
+Run without installing globally:
+
+```bash
+npx @quietlychan/repo-sweep --help
+```
+
+Install globally:
+
+```bash
+npm install -g @quietlychan/repo-sweep
+repo-sweep --help
+```
+
+If Node.js is not available, download the single-file binary for the current platform from GitHub Releases.
 
 ## Configuration
 
@@ -52,40 +72,42 @@ GIT_USERNAME=x-access-token
 
 ## Usage
 
+The examples below assume a global npm install or a GitHub Release binary. For temporary `npx` usage, replace `repo-sweep` with `npx @quietlychan/repo-sweep`.
+
 Interactive mode:
 
 ```bash
-bun run start
+repo-sweep
 ```
 
 List repositories:
 
 ```bash
-bun run list
+repo-sweep list
 ```
 
 Clone missing repositories:
 
 ```bash
-bun run clone
+repo-sweep clone
 ```
 
 Pull existing repositories:
 
 ```bash
-bun run pull
+repo-sweep pull
 ```
 
 Output JSON:
 
 ```bash
-bun run list -- --json
+repo-sweep list --json
 ```
 
 Clone and also pull repositories that already exist locally:
 
 ```bash
-bun run clone -- --update
+repo-sweep clone --update
 ```
 
 Example progress output:
@@ -144,6 +166,40 @@ dist/repo-sweep-windows-x64.exe
 dist/README.txt
 ```
 
+## Publish to npm
+
+The unscoped `repo-sweep` name is already taken on npm, so this package uses the scoped name:
+
+```text
+@quietlychan/repo-sweep
+```
+
+Check npm login status:
+
+```bash
+npm whoami
+```
+
+Log in if needed:
+
+```bash
+npm login
+```
+
+Publish the public scoped package:
+
+```bash
+npm publish --access public
+```
+
+The `prepack` script runs `bun run build:npm` before publishing and generates the Node.js runtime package at `dist-npm/repo-sweep.js`. Verify after publishing:
+
+```bash
+npx @quietlychan/repo-sweep --help
+```
+
+If npm two-factor authentication is enabled, npm will ask for a one-time password. Trusted Publishing can also be configured later so GitHub Actions publishes through OIDC without a long-lived npm token.
+
 ## Releases
 
 Yes, repositories like the one in the screenshot usually use a CI workflow such as GitHub Actions. The workflow builds binaries on tag pushes, creates a GitHub Release, and uploads the compiled files as Release assets.
@@ -151,8 +207,8 @@ Yes, repositories like the one in the screenshot usually use a CI workflow such 
 This repository includes `.github/workflows/release.yml`. To publish a release:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
 GitHub Actions will:

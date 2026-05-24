@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+## v0.1.1
+
+### 新增
+
+- 准备 npm 发布元数据，补充 author、repository、homepage、bugs、keywords、engines 和 publishConfig。
+- npm 包名使用 `@quietlychan/repo-sweep`，安装后的命令仍为 `repo-sweep`。
+- 增加 Node.js 可运行的 npm 打包产物，支持 `npx @quietlychan/repo-sweep` 和 `npm install -g @quietlychan/repo-sweep`。
+
+### 变更
+
+- 将 npm 包入口改为 Node.js 可执行入口；Bun 保留用于本地开发和跨平台二进制构建。
+
 ## v0.1.0
 
 Repo Sweep 的首个公开版本，提供 GitLab/GitHub 多仓库批量管理能力，并带有跨平台 Release 二进制产物。
