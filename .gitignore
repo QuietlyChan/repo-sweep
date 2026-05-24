@@ -4,3 +4,4 @@ gitlab-projects/
 node_modules/
 dist/
 dist-npm/
+*.tgz

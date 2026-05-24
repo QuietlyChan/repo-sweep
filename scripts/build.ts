@@ -2,42 +2,10 @@
 
 import { mkdir, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
-
-interface BuildTarget {
-  name: string;
-  target: string;
-  outfile: string;
-}
+import { currentBunTarget, TARGETS, type BuildTarget } from "./build-targets";
 
 const DIST_DIR = resolve("dist");
 const ENTRYPOINT = resolve("src/repo-sweep.ts");
-const TARGETS: BuildTarget[] = [
-  {
-    name: "macOS Apple 芯片",
-    target: "bun-darwin-arm64",
-    outfile: "repo-sweep-darwin-arm64",
-  },
-  {
-    name: "macOS Intel 芯片",
-    target: "bun-darwin-x64",
-    outfile: "repo-sweep-darwin-x64",
-  },
-  {
-    name: "Linux x64",
-    target: "bun-linux-x64",
-    outfile: "repo-sweep-linux-x64",
-  },
-  {
-    name: "Linux arm64",
-    target: "bun-linux-arm64",
-    outfile: "repo-sweep-linux-arm64",
-  },
-  {
-    name: "Windows x64",
-    target: "bun-windows-x64",
-    outfile: "repo-sweep-windows-x64.exe",
-  },
-];
 
 function printHelp(): void {
   console.log(`二进制构建脚本
@@ -53,9 +21,7 @@ function printHelp(): void {
   --help                显示帮助
 
 可用 target：
-${TARGETS.map((target) => `  ${target.target.padEnd(18)} ${target.name}`).join(
-    "\n",
-  )}
+${TARGETS.map((target) => `  ${target.bunTarget.padEnd(18)} ${target.name}`).join("\n")}
 `);
 }
 
@@ -92,38 +58,11 @@ function hasFlag(name: string): boolean {
   return Bun.argv.slice(2).includes(name);
 }
 
-function currentTarget(): string | null {
-  const platform = process.platform;
-  const arch = process.arch;
-
-  if (platform === "darwin" && arch === "arm64") {
-    return "bun-darwin-arm64";
-  }
-
-  if (platform === "darwin" && arch === "x64") {
-    return "bun-darwin-x64";
-  }
-
-  if (platform === "linux" && arch === "x64") {
-    return "bun-linux-x64";
-  }
-
-  if (platform === "linux" && arch === "arm64") {
-    return "bun-linux-arm64";
-  }
-
-  if (platform === "win32" && arch === "x64") {
-    return "bun-windows-x64";
-  }
-
-  return null;
-}
-
 function selectTargets(): BuildTarget[] {
   const requestedTargets = argValues("--target");
 
   if (hasFlag("--current")) {
-    const target = currentTarget();
+    const target = currentBunTarget();
     if (!target) {
       throw new Error(
         `当前平台暂未配置构建目标：${process.platform}/${process.arch}`,
@@ -137,7 +76,7 @@ function selectTargets(): BuildTarget[] {
   }
 
   return requestedTargets.map((targetName) => {
-    const target = TARGETS.find((item) => item.target === targetName);
+    const target = TARGETS.find((item) => item.bunTarget === targetName);
     if (!target) {
       throw new Error(`不支持的构建目标：${targetName}`);
     }
@@ -146,18 +85,18 @@ function selectTargets(): BuildTarget[] {
 }
 
 async function runBuild(target: BuildTarget): Promise<void> {
-  const outfile = join(DIST_DIR, target.outfile);
+  const outfile = join(DIST_DIR, target.binaryName);
   const args = [
     "build",
     "--compile",
     "--compile-autoload-dotenv",
     "--minify",
-    `--target=${target.target}`,
+    `--target=${target.bunTarget}`,
     `--outfile=${outfile}`,
     ENTRYPOINT,
   ];
 
-  console.log(`\n开始构建：${target.name} (${target.target})`);
+  console.log(`\n开始构建：${target.name} (${target.bunTarget})`);
   const proc = Bun.spawn(["bun", ...args], {
     stdout: "inherit",
     stderr: "inherit",
@@ -165,7 +104,7 @@ async function runBuild(target: BuildTarget): Promise<void> {
   const exitCode = await proc.exited;
 
   if (exitCode !== 0) {
-    throw new Error(`构建失败：${target.target}，退出码 ${exitCode}`);
+    throw new Error(`构建失败：${target.bunTarget}，退出码 ${exitCode}`);
   }
 
   console.log(`构建完成：${outfile}`);
@@ -192,7 +131,7 @@ async function writeDistReadme(targets: BuildTarget[]): Promise<void> {
   GIT_TARGET_DIR=目标目录
 
 本次构建产物：
-${targets.map((target) => `  - ${target.outfile}`).join("\n")}
+${targets.map((target) => `  - ${target.binaryName}`).join("\n")}
 `;
 
   await Bun.write(join(DIST_DIR, "README.txt"), readme);

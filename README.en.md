@@ -18,12 +18,14 @@ Repo Sweep batch lists, clones, and pulls repositories that the current account 
 
 - Git must be installed and available in `PATH`.
 - Network access to the configured Git provider.
-- The npm package requires Node.js 20 or newer.
-- Bun is required for local development and Release binary builds. Release binaries include the Bun runtime.
+- npm / npx installation requires Node.js 18 or newer to launch the current platform binary.
+- Bun is required for local development and binary builds. npm platform packages and GitHub Release binaries include the Bun runtime.
 
 ## npm Installation
 
 The npm package name is `@quietlychan/repo-sweep`; the installed command is still `repo-sweep`.
+
+npm automatically downloads the matching platform binary package, such as `@quietlychan/repo-sweep-darwin-arm64`. Node.js is only used by the thin launcher; the core CLI still uses native Bun APIs and runs as a single-file binary.
 
 Run without installing globally:
 
@@ -166,40 +168,6 @@ dist/repo-sweep-windows-x64.exe
 dist/README.txt
 ```
 
-## Publish to npm
-
-The unscoped `repo-sweep` name is already taken on npm, so this package uses the scoped name:
-
-```text
-@quietlychan/repo-sweep
-```
-
-Check npm login status:
-
-```bash
-npm whoami
-```
-
-Log in if needed:
-
-```bash
-npm login
-```
-
-Publish the public scoped package:
-
-```bash
-npm publish --access public
-```
-
-The `prepack` script runs `bun run build:npm` before publishing and generates the Node.js runtime package at `dist-npm/repo-sweep.js`. Verify after publishing:
-
-```bash
-npx @quietlychan/repo-sweep --help
-```
-
-If npm two-factor authentication is enabled, npm will ask for a one-time password. Trusted Publishing can also be configured later so GitHub Actions publishes through OIDC without a long-lived npm token.
-
 ## Releases
 
 Yes, repositories like the one in the screenshot usually use a CI workflow such as GitHub Actions. The workflow builds binaries on tag pushes, creates a GitHub Release, and uploads the compiled files as Release assets.
@@ -219,7 +187,7 @@ GitHub Actions will:
 4. Build cross-platform binaries into `dist`.
 5. Upload the files in `dist` to the GitHub Release assets.
 
-The workflow uses the built-in `GITHUB_TOKEN`, so no extra token is needed for public release uploads in normal GitHub repositories. Make sure repository Actions permissions allow `contents: write`.
+The workflow uses the built-in `GITHUB_TOKEN` for Release assets. Make sure repository Actions permissions allow `contents: write`.
 
 ## Development
 

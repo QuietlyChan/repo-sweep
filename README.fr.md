@@ -18,12 +18,14 @@ Repo Sweep permet de lister, cloner et mettre à jour en lot les dépôts GitLab
 
 - Git doit être installé et disponible dans `PATH`.
 - Le réseau doit pouvoir accéder au fournisseur Git configuré.
-- Le paquet npm nécessite Node.js 20 ou une version plus récente.
-- Bun est nécessaire pour le développement local et la construction des binaires de Release. Les binaires de Release incluent le runtime Bun.
+- L'installation npm / npx nécessite Node.js 18 ou plus récent pour lancer le binaire de la plateforme courante.
+- Bun est nécessaire pour le développement local et la construction des binaires. Les paquets npm de plateforme et les binaires GitHub Release incluent le runtime Bun.
 
 ## Installation npm
 
 Le nom du paquet npm est `@quietlychan/repo-sweep` ; la commande installée reste `repo-sweep`.
+
+npm télécharge automatiquement le paquet binaire correspondant à la plateforme, par exemple `@quietlychan/repo-sweep-darwin-arm64`. Node.js sert uniquement au launcher léger ; le CLI principal utilise toujours les API natives de Bun et s'exécute comme un binaire mono-fichier.
 
 Exécution sans installation globale :
 

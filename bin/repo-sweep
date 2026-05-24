@@ -1,3 +1,119 @@
 #!/usr/bin/env node
 
-import "../dist-npm/repo-sweep.js";
+import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+
+const require = createRequire(import.meta.url);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const platformPackages = {
+  "darwin-arm64": {
+    name: "@quietlychan/repo-sweep-darwin-arm64",
+    binary: "repo-sweep",
+  },
+  "darwin-x64": {
+    name: "@quietlychan/repo-sweep-darwin-x64",
+    binary: "repo-sweep",
+  },
+  "linux-x64": {
+    name: "@quietlychan/repo-sweep-linux-x64",
+    binary: "repo-sweep",
+  },
+  "linux-arm64": {
+    name: "@quietlychan/repo-sweep-linux-arm64",
+    binary: "repo-sweep",
+  },
+  "win32-x64": {
+    name: "@quietlychan/repo-sweep-windows-x64",
+    binary: "repo-sweep.exe",
+  },
+};
+
+function currentPlatformPackage() {
+  const key = `${os.platform()}-${os.arch()}`;
+  return platformPackages[key];
+}
+
+function resolveBinary(info) {
+  const packageJsonPath = require.resolve(`${info.name}/package.json`);
+  const binaryPath = path.join(
+    path.dirname(packageJsonPath),
+    "bin",
+    info.binary,
+  );
+
+  if (!existsSync(binaryPath)) {
+    throw new Error(`未找到平台二进制文件：${binaryPath}`);
+  }
+
+  return binaryPath;
+}
+
+function runSourceIfAvailable() {
+  const sourceEntrypoint = path.resolve(__dirname, "..", "src", "repo-sweep.ts");
+
+  if (!existsSync(sourceEntrypoint)) {
+    return false;
+  }
+
+  const result = spawnSync("bun", ["run", sourceEntrypoint, ...process.argv.slice(2)], {
+    stdio: "inherit",
+    windowsHide: false,
+  });
+
+  if (result.error) {
+    console.error(result.error.message);
+    process.exit(1);
+  }
+
+  process.exit(result.status ?? 1);
+}
+
+function main() {
+  runSourceIfAvailable();
+
+  const info = currentPlatformPackage();
+
+  if (!info) {
+    console.error(`当前平台暂不支持：${os.platform()}/${os.arch()}`);
+    process.exit(1);
+  }
+
+  let binaryPath;
+  try {
+    const installedBinary = path.join(__dirname, "repo-sweep-bin");
+    binaryPath = existsSync(installedBinary) ? installedBinary : resolveBinary(info);
+  } catch (error) {
+    console.error(
+      [
+        "未安装当前平台对应的 Repo Sweep 二进制包。",
+        `需要的包：${info.name}`,
+        "",
+        "这通常表示 npm 安装时跳过了 optionalDependencies，或使用了 --ignore-optional。",
+        "请重新安装，或单独安装上面的平台包。",
+        "",
+        `入口目录：${__dirname}`,
+        `原始错误：${error instanceof Error ? error.message : String(error)}`,
+      ].join("\n"),
+    );
+    process.exit(1);
+  }
+
+  const result = spawnSync(binaryPath, process.argv.slice(2), {
+    stdio: "inherit",
+    windowsHide: false,
+  });
+
+  if (result.error) {
+    console.error(result.error.message);
+    process.exit(1);
+  }
+
+  process.exit(result.status ?? 1);
+}
+
+main();

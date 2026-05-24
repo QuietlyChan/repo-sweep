@@ -1,10 +1,8 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
-import { spawn, type ChildProcessByStdio, type SpawnOptionsWithoutStdio } from "node:child_process";
-import { chmod, mkdir, rm, stat, writeFile } from "node:fs/promises";
+import { chmod, mkdir, rm, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
-import type { Readable } from "node:stream";
 import * as p from "@clack/prompts";
 import {
   getProvider,
@@ -213,7 +211,7 @@ function getCliParts(): {
   parsedCommand: CommandName | null;
   rawOptions: Record<string, string | boolean>;
 } {
-  const args = process.argv.slice(2);
+  const args = Bun.argv.slice(2);
   const parsedCommand = parseCommand(args[0]);
   const rawOptions = parseArgs(args.slice(parsedCommand ? 1 : 0));
 
@@ -224,7 +222,7 @@ function buildOptions(
   command: CommandName,
   rawOptions: Record<string, string | boolean>,
 ): Options {
-  const env = process.env;
+  const env = Bun.env;
   const providerName = parseProviderName(
     optionString(rawOptions, "provider") || env.GIT_PROVIDER,
   );
@@ -608,57 +606,30 @@ function gitInstallHelp(): string {
   ].join("\n");
 }
 
-function spawnPipe(
-  command: string,
-  args: string[],
-  options: SpawnOptionsWithoutStdio = {},
-): ChildProcessByStdio<null, Readable, Readable> {
-  return spawn(command, args, {
-    ...options,
-    stdio: ["ignore", "pipe", "pipe"],
-  }) as ChildProcessByStdio<null, Readable, Readable>;
-}
-
-function waitForExit(
-  proc: ChildProcessByStdio<null, Readable, Readable>,
-): Promise<number> {
-  return new Promise((resolve, reject) => {
-    proc.once("error", reject);
-    proc.once("close", (code) => resolve(code ?? 1));
-  });
-}
-
-async function pipeToText(stream: Readable | null | undefined): Promise<string> {
-  if (!stream) {
+async function pipeToText(
+  stream: ReadableStream<Uint8Array> | number | null | undefined,
+): Promise<string> {
+  if (!stream || typeof stream === "number") {
     return "";
   }
 
-  const decoder = new TextDecoder();
-  let captured = "";
-
-  for await (const chunk of stream) {
-    const text =
-      typeof chunk === "string"
-        ? chunk
-        : decoder.decode(chunk, { stream: true });
-    captured += text;
-  }
-
-  const tail = decoder.decode();
-  return captured + tail;
+  return new Response(stream).text();
 }
 
 async function ensureGitAvailable(): Promise<void> {
-  let proc: ChildProcessByStdio<null, Readable, Readable>;
+  let proc: ReturnType<typeof Bun.spawn>;
   try {
-    proc = spawnPipe("git", ["--version"]);
+    proc = Bun.spawn(["git", "--version"], {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
   } catch (error) {
     throw new Error(`${gitInstallHelp()}\n\n原始错误：${formatUnknownError(error)}`);
   }
   const [stdout, stderr, exitCode] = await Promise.all([
     pipeToText(proc.stdout),
     pipeToText(proc.stderr),
-    waitForExit(proc),
+    proc.exited,
   ]);
 
   if (exitCode !== 0) {
@@ -770,7 +741,7 @@ function createGitEnv(
   askPassPath: string | null,
 ): Record<string, string> {
   const env = Object.fromEntries(
-    Object.entries(process.env).filter(
+    Object.entries(Bun.env).filter(
       (entry): entry is [string, string] => typeof entry[1] === "string",
     ),
   );
@@ -926,7 +897,7 @@ async function createAskPass(options: Options): Promise<string | null> {
   }
 
   const path = join(tmpdir(), `repo-sweep-askpass-${Date.now()}.sh`);
-  await writeFile(
+  await Bun.write(
     path,
     `#!/bin/sh
 case "$1" in
@@ -941,7 +912,7 @@ esac
 }
 
 async function readProcessStream(
-  stream: Readable | null,
+  stream: ReadableStream<Uint8Array> | null,
   onText: (text: string) => void,
 ): Promise<string> {
   if (!stream) {
@@ -951,11 +922,15 @@ async function readProcessStream(
   const decoder = new TextDecoder();
   let captured = "";
 
-  for await (const chunk of stream) {
-    const text =
-      typeof chunk === "string"
-        ? chunk
-        : decoder.decode(chunk, { stream: true });
+  const reader = stream.getReader();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+
+    const text = decoder.decode(value, { stream: true });
     captured = appendCapture(captured, text);
     onText(text);
   }
@@ -1003,15 +978,17 @@ async function runGit(
   }
 
   try {
-    const proc = spawnPipe("git", args, {
+    const proc = Bun.spawn(["git", ...args], {
       cwd,
       env,
+      stdout: "pipe",
+      stderr: "pipe",
     });
     const gitProgress = createGitProgressReporter(progress);
     const [stdout, stderr, exitCode] = await Promise.all([
       readProcessStream(proc.stdout, (text) => gitProgress.write(text)),
       readProcessStream(proc.stderr, (text) => gitProgress.write(text)),
-      waitForExit(proc),
+      proc.exited,
     ]);
     gitProgress.flush();
 
@@ -1059,13 +1036,15 @@ async function remoteHasNoHeads(
     return false;
   }
 
-  const proc = spawnPipe("git", ["ls-remote", "--heads", "origin"], {
+  const proc = Bun.spawn(["git", "ls-remote", "--heads", "origin"], {
     cwd,
     env: createGitEnv(options, askPassPath),
+    stdout: "pipe",
+    stderr: "pipe",
   });
   const [stdout, exitCode] = await Promise.all([
-    pipeToText(proc.stdout),
-    waitForExit(proc),
+    new Response(proc.stdout).text(),
+    proc.exited,
   ]);
 
   if (exitCode !== 0) {

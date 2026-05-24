@@ -8,11 +8,12 @@
 
 - 准备 npm 发布元数据，补充 author、repository、homepage、bugs、keywords、engines 和 publishConfig。
 - npm 包名使用 `@quietlychan/repo-sweep`，安装后的命令仍为 `repo-sweep`。
-- 增加 Node.js 可运行的 npm 打包产物，支持 `npx @quietlychan/repo-sweep` 和 `npm install -g @quietlychan/repo-sweep`。
+- 增加 npm 主包与平台二进制包结构，支持 `npx @quietlychan/repo-sweep` 和 `npm install -g @quietlychan/repo-sweep`。
+- 增加 `@quietlychan/repo-sweep-darwin-arm64`、`@quietlychan/repo-sweep-darwin-x64`、`@quietlychan/repo-sweep-linux-x64`、`@quietlychan/repo-sweep-linux-arm64`、`@quietlychan/repo-sweep-windows-x64` 平台包。
 
 ### 变更
 
-- 将 npm 包入口改为 Node.js 可执行入口；Bun 保留用于本地开发和跨平台二进制构建。
+- CLI 核心继续使用 Bun 原生 API；npm 主包只提供 Node.js 启动器，用于执行当前平台的 Bun 编译二进制。
 
 ## v0.1.0
 

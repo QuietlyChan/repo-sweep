@@ -9,6 +9,13 @@
         "@types/bun": "^1.3.14",
         "typescript": "^6.0.3",
       },
+      "optionalDependencies": {
+        "@quietlychan/repo-sweep-darwin-arm64": "0.1.1",
+        "@quietlychan/repo-sweep-darwin-x64": "0.1.1",
+        "@quietlychan/repo-sweep-linux-arm64": "0.1.1",
+        "@quietlychan/repo-sweep-linux-x64": "0.1.1",
+        "@quietlychan/repo-sweep-windows-x64": "0.1.1",
+      },
     },
   },
   "packages": {
