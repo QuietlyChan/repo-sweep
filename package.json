@@ -14,7 +14,7 @@
   ],
   "author": {
     "name": "QuietlyChan",
-    "email": "8343216+QuietlyChan@users.noreply.github.com",
+    "email": "quietlychan@foxmail.com",
     "url": "https://github.com/QuietlyChan"
   },
   "license": "MIT",
@@ -58,10 +58,8 @@
   "bin": {
     "repo-sweep": "bin/repo-sweep"
   },
-  "dependencies": {
-    "@clack/prompts": "^1.4.0"
-  },
   "devDependencies": {
+    "@clack/prompts": "^1.4.0",
     "@types/bun": "^1.3.14",
     "typescript": "^6.0.3"
   }
